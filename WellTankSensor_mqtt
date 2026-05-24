@@ -27,11 +27,18 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     
-    // UPDATED LINE: client.connect(clientID, user, password)
-    if (client.connect("ESP32_WaterSensor", mqtt_user, mqtt_password)) {
+    // --- LAST WILL & TESTAMENT CONFIGURATION ---
+    const char* willTopic = "home/tank/status";
+    int willQoS = 1;
+    bool willRetain = true;
+    const char* willMessage = "offline";
+
+    // Connect with Last Will credentials: client.connect(id, user, pass, willTopic, willQoS, willRetain, willMessage)
+    if (client.connect("ESP32_WaterSensor", mqtt_user, mqtt_password, willTopic, willQoS, willRetain, willMessage)) {
       Serial.println("connected");
-      // Once connected, publish an announcement...
-      client.publish("home/tank/status", "online");
+      
+      // Once connected, immediately publish "online" with retention
+      client.publish("home/tank/status", "online", true);
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
